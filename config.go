@@ -7,8 +7,6 @@ import (
 	"sync"
 )
 
-var Config *_Config
-
 type ConfigEntry struct {
 	Value interface{}
 	Type  reflect.Kind
@@ -17,6 +15,16 @@ type ConfigEntry struct {
 type _Config struct {
 	sync.RWMutex
 	entries map[string]ConfigEntry
+}
+
+var Config *_Config
+
+func _Load() {
+	Config = &_Config{entries: make(map[string]ConfigEntry)}
+}
+
+func init() {
+	_Load()
 }
 
 // Returns the splice of entry keys
@@ -46,12 +54,4 @@ func (c *_Config) get(k string) (ConfigEntry) {
 	c.RLock()
 	defer c.RUnlock()
 	return c.entries[k]
-}
-
-func _Load() {
-	Config = &_Config{entries: make(map[string]ConfigEntry)}
-}
-
-func init() {
-	_Load()
 }
