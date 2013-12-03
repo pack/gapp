@@ -45,7 +45,7 @@ func (c *_Config) set(k string, v interface{}, t reflect.Kind) (ConfigEntry, err
 		c.entries[k] = entry
 		return entry, nil
 	}
-	error_string := fmt.Sprintf("gapp: %s is not of kind %s", v, t)
+	error_string := fmt.Sprintf("gapp: %s is not a kind of %s", v, t)
 	return ConfigEntry{}, errors.New(error_string)
 }
 
