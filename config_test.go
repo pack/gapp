@@ -3,28 +3,22 @@ package gapp
 import (
 	"testing"
 	"reflect"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestEmptyKeys(t *testing.T) {
-	if len(Config.keys()) != 0 {
-		t.Error("Config entries are not empty")
-	}
-}
+func TestConfig(t *testing.T) {
+	Convey("Empty configuration should have no entries", t, func() {
+		So(len(Config.keys()), ShouldEqual, 0)
+	})
 
-func TestAddingEntry(t *testing.T) {
-	resp, err := Config.set("power", 9000, reflect.Int)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if resp.Value != 9000 {
-		t.Error("Added configuration entry value did not match")
-	}
-}
+	Convey("After setting an entry it should be retrievable", t, func() {
+		resp, err := Config.set("power", 9000, reflect.Int)
+		So(err, ShouldEqual, nil)
+		So(resp.Value, ShouldEqual, 9000)
+	})
 
-func TestAddingInvalidEntry(t *testing.T) {
-	_, err := Config.set("power", 9000, reflect.String)
-	if err == nil {
-		t.Error("Failed to properly handle adding an invalid entry")
-	}
+	Convey("Adding an invalid entry should throw an error", t, func() {
+		_, err := Config.set("power", 9000, reflect.String)
+		So(err, ShouldNotEqual, nil)
+	})
 }
