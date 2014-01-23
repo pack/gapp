@@ -1,16 +1,19 @@
 package gapp
 
 import (
-	// "errors"
-	// "fmt"
+	//"errors"
+	//"fmt"
+	"reflect"
 	"sync"
 )
 
 type _ConfigEntry struct {
+	Long string
 	Short string
 	Description string
 	Value interface{}
-	Default interface{}
+	Type reflect.Kind
+	CLI bool
 	Required bool
 	Listeners []chan interface{}
 }
@@ -28,7 +31,8 @@ func DefaultEntry() _ConfigEntry {
 		Short: "",
 		Description: "",
 		Value: nil,
-		Default: nil,
+		Type: reflect.String,
+		CLI: false,
 		Required: false,
 		Listeners: make([]chan interface{}, 0),
 	}
@@ -52,17 +56,26 @@ func (c *_Config) keys() []string {
 }
 
 // Add up a new configuration parameter
-func (c *_Config) add(option, short, description string, dfault interface{}, required bool) (_ConfigEntry, error) {
+func (c *_Config) add(option, short, description string, dfault interface{}, dtype reflect.Kind, cli, required bool) (_ConfigEntry, error) {
 	entry := DefaultEntry()
 	entry.Long = option
 	entry.Short = short
 	entry.Description = description
 	entry.Value = dfault
+	entry.Type = dtype
+	entry.CLI = cli
 	entry.Required = required
 	c.Lock()
 	defer c.Unlock()
 	c.entries[option] = entry
 	return entry, nil
+}
+
+func validate_input(input interface{}, cfg _ConfigEntry) (error) {
+	reflect.ValueOf(input).Kind()
+	//error_string := fmt.Sprintf("Config Error: %s is not a kind of %s", v, t)
+	return nil
+	//return errors.New(error_string)
 }
 
 // // Sets a configuration parameter
