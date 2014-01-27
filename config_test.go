@@ -2,13 +2,14 @@ package gapp
 
 import (
 	. "launchpad.net/gocheck"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
 
 type ConfigSuite struct{}
+
 var _ = Suite(&ConfigSuite{})
 
 func (s *ConfigSuite) TearDownTest(c *C) {
