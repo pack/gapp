@@ -24,4 +24,4 @@ install:
 	go install -ldflags $(LDFLAGS)
 
 test:
-	go test
+	go test -v
