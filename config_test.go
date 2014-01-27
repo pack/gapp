@@ -68,3 +68,14 @@ func (s *ConfigSuite) TestModifyInteger(c *C) {
 	c.Assert(resp2.Value, Equals, 9000)
 	c.Assert(resp2.Type, Equals, reflect.Int)
 }
+
+func (s *ConfigSuite) TestSubscription(c *C) {
+	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, Equals, nil)
+	ch, err2 := Config.subscribe_to("power")
+	c.Assert(err2, Equals, nil)
+	_, err3 := Config.set("power", 9000)
+	c.Assert(err3, Equals, nil)
+	value := <-ch
+	c.Assert(value, Equals, 9000)
+}

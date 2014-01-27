@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+// The generic configuration entry
 type _ConfigEntry struct {
 	Long        string
 	Short       string
@@ -18,6 +19,7 @@ type _ConfigEntry struct {
 	Listeners   []chan interface{}
 }
 
+// Config wrapper struct with RWMutex
 type _Config struct {
 	sync.RWMutex
 	entries map[string]_ConfigEntry
@@ -25,6 +27,7 @@ type _Config struct {
 
 var Config *_Config
 
+// Empty configuration entry
 func DefaultEntry() _ConfigEntry {
 	return _ConfigEntry{
 		Long:        "",
@@ -123,6 +126,29 @@ func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
 	if err == nil {
 		entry.Value = value
 		c.entries[key] = entry
+		go c._notify_subscribers(key, value)
 	}
 	return entry, err
+}
+
+// Helper function for listener notifications
+func (c *_Config) _notify_subscribers(key string, value interface{}) {
+	entry, _ := c.get_entry(key)
+	for _, ch := range entry.Listeners {
+		ch <- value
+	}
+}
+
+// Subscribe to a given configuration value
+func (c *_Config) subscribe_to(key string) (chan interface{}, error) {
+	ch := make(chan interface{})
+	entry, ok := c.get_entry(key)
+	if ok == true {
+		c.Lock()
+		defer c.Unlock()
+		entry.Listeners = append(entry.Listeners, ch)
+		c.entries[key] = entry
+		return ch, nil
+	}
+	return ch, errors.New(fmt.Sprintf("Unable to subscribe to config: `%s`", key))
 }
