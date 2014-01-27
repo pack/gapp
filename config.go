@@ -1,10 +1,10 @@
 package gapp
 
 import (
-	//"errors"
-	//"fmt"
-	"reflect"
 	"sync"
+	"reflect"
+	"errors"
+	"fmt"
 )
 
 type _ConfigEntry struct {
@@ -13,8 +13,8 @@ type _ConfigEntry struct {
 	Description string
 	Value interface{}
 	Type reflect.Kind
-	CLI bool
 	Required bool
+	CLI bool
 	Listeners []chan interface{}
 }
 
@@ -32,12 +32,13 @@ func DefaultEntry() _ConfigEntry {
 		Description: "",
 		Value: nil,
 		Type: reflect.String,
-		CLI: false,
 		Required: false,
+		CLI: false,
 		Listeners: make([]chan interface{}, 0),
 	}
 }
 
+// Initializes configuration to an empty state
 func _Load() {
 	Config = &_Config{entries: make(map[string]_ConfigEntry)}
 }
@@ -55,50 +56,73 @@ func (c *_Config) keys() []string {
 	return klist
 }
 
+// Remove all configuration parameters
+func (c *_Config) clear() {
+	_Load()
+}
+
 // Add up a new configuration parameter
-func (c *_Config) add(option, short, description string, dfault interface{}, dtype reflect.Kind, cli, required bool) (_ConfigEntry, error) {
+func (c *_Config) add(long, short, description string, value interface{}, tpe reflect.Kind, required, cli bool) (_ConfigEntry, error) {
 	entry := DefaultEntry()
-	entry.Long = option
+	entry.Long = long
 	entry.Short = short
 	entry.Description = description
-	entry.Value = dfault
-	entry.Type = dtype
-	entry.CLI = cli
+	entry.Value = value
+	entry.Type = tpe
 	entry.Required = required
+	entry.CLI = cli
 	c.Lock()
 	defer c.Unlock()
-	c.entries[option] = entry
-	return entry, nil
+	err := enforce_type(value, entry)
+	if err == nil {
+		c.entries[long] = entry
+	}
+	return entry, err
 }
 
-func validate_input(input interface{}, cfg _ConfigEntry) (error) {
-	reflect.ValueOf(input).Kind()
-	//error_string := fmt.Sprintf("Config Error: %s is not a kind of %s", v, t)
-	return nil
-	//return errors.New(error_string)
+// Type enforce a configuration variable
+func enforce_type(value interface{}, cfg _ConfigEntry) (error) {
+	val := reflect.ValueOf(value)
+	tpe := val.Kind()
+	if tpe != cfg.Type {
+		errmsg := fmt.Sprintf("Config Entry `%s` is not of type `%s`: (%s [%s])", cfg.Long, cfg.Type, val, tpe)
+		return errors.New(errmsg)
+	}
+  return nil
 }
 
-// // Sets a configuration parameter
-// func (c *_Config) set(k string, v interface{}) (_ConfigEntry, error) {
-// 	entry := ConfigEntry{Value: v, Type: t}
-// 	if t == reflect.ValueOf(v).Kind() {
-// 		c.Lock()
-// 		defer c.Unlock()
-// 		c.entries[k] = entry
-// 		return entry, nil
-// 	}
-// 	error_string := fmt.Sprintf("gapp: %s is not a kind of %s", v, t)
-// 	return ConfigEntry{}, errors.New(error_string)
-// }
+// Retrieve a configuation entry
+func (c *_Config) get_entry(key string) (_ConfigEntry, bool) {
+	c.RLock()
+	defer c.RUnlock()
+	cfg, ok := c.entries[key]
+	return cfg, ok
+}
 
-// // Gets information for a configuration parameter
-// func (c *_Config) info(k string) (ConfigEntry) {
-// 	c.RLock()
-// 	defer c.RUnlock()
-// 	return c.entries[k]
-// }
+// Retrieve a configuration value
+func (c *_Config) get(key string) (interface{}, bool) {
+	cfg, ok := c.get_entry(key)
+	if ok == false {
+		return nil, ok
+	}
+	return cfg.Value, ok
+}
 
-// // Gets a configuration value
-// func (c *_Config) get(k string) (interface{}) {
-// 	return c.info(k).Value
-// }
+//Sets a configuration parameter
+func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
+	entry, ok := c.get_entry(key)
+	if ok == true {
+		if reflect.ValueOf(value) == reflect.ValueOf(entry.Value) {
+			return entry, nil
+		}
+	}
+
+	c.Lock()
+	defer c.Unlock()
+	err := enforce_type(value, entry)
+	if err == nil {
+		entry.Value = value
+		c.entries[key] = entry
+	}
+	return entry, err
+}

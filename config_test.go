@@ -1,32 +1,69 @@
 package gapp
 
 import (
+	. "launchpad.net/gocheck"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
+	"reflect"
 )
 
-func TestConfig(t *testing.T) {
-	Convey("Empty configuration should have no entries", t, func() {
-		So(len(Config.keys()), ShouldEqual, 0)
-	})
+func Test(t *testing.T) { TestingT(t) }
 
-	Convey("Should be able to set defaults", t, func() {
-		resp, err := Config.add("name", "n", "name of the user", "Leeroy Jenkins", reflect.String, true, true)
-		So(err, ShouldEqual, nil)
-		So(resp.Long, ShouldEqual, "name")
-		So(resp.Short, ShouldEqual, "n")
-		So(resp.CLI, ShouldEqual, true)
-		So(resp.Required, ShouldEqual, true)
-	})
+type ConfigSuite struct{}
+var _ = Suite(&ConfigSuite{})
 
-	 Convey("After setting an entry it should be retrievable", t, func() {
-		 resp, err := Config.set("power", "p", "power level", 9000, reflect.Int)
-	 	So(err, ShouldEqual, nil)
-	 	So(resp.Value, ShouldEqual, 9000)
-	 })
+func (s *ConfigSuite) TearDownTest(c *C) {
+	Config.clear()
+}
 
-	// Convey("Adding an invalid entry should throw an error", t, func() {
-	// 	_, err := Config.set("power", 9000, reflect.String)
-	// 	So(err, ShouldNotEqual, nil)
-	// })
+func (s *ConfigSuite) TestEmpty(c *C) {
+	c.Assert(len(Config.keys()), Equals, 0)
+}
+
+func (s *ConfigSuite) TestAddDefaults(c *C) {
+	resp, err := Config.add("name", "n", "user name", "Philip J. Fry", reflect.String, false, false)
+	c.Assert(err, IsNil)
+	c.Assert(resp.Long, Equals, "name")
+	c.Assert(resp.Short, Equals, "n")
+	c.Assert(resp.Description, Equals, "user name")
+	c.Assert(resp.Value, Equals, "Philip J. Fry")
+	c.Assert(resp.Type, Equals, reflect.String)
+	c.Assert(resp.Required, Equals, false)
+	c.Assert(resp.CLI, Equals, false)
+}
+
+func (s *ConfigSuite) TestAddInteger(c *C) {
+	resp, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, IsNil)
+	c.Assert(resp.Value, Equals, 3000)
+	c.Assert(resp.Type, Equals, reflect.Int)
+}
+
+func (s *ConfigSuite) TestTypeEnforcement(c *C) {
+	_, err := Config.add("power", "p", "power level", "3000", reflect.Int, false, false)
+	c.Assert(err, ErrorMatches, "Config Entry `power` is not of type `int`.*")
+}
+
+func (s *ConfigSuite) TestGetValue(c *C) {
+	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, IsNil)
+	resp, ok := Config.get("power")
+	c.Assert(ok, Equals, true)
+	c.Assert(resp, Equals, 3000)
+}
+
+func (s *ConfigSuite) TestInvalidGetValue(c *C) {
+	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, IsNil)
+	resp, ok := Config.get("pow")
+	c.Assert(ok, Equals, false)
+	c.Assert(resp, IsNil)
+}
+
+func (s *ConfigSuite) TestModifyInteger(c *C) {
+	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, Equals, nil)
+	resp2, err2 := Config.set("power", 9000)
+	c.Assert(err2, Equals, nil)
+	c.Assert(resp2.Value, Equals, 9000)
+	c.Assert(resp2.Type, Equals, reflect.Int)
 }
