@@ -1,21 +1,21 @@
 package gapp
 
 import (
-	"sync"
-	"reflect"
 	"errors"
 	"fmt"
+	"reflect"
+	"sync"
 )
 
 type _ConfigEntry struct {
-	Long string
-	Short string
+	Long        string
+	Short       string
 	Description string
-	Value interface{}
-	Type reflect.Kind
-	Required bool
-	CLI bool
-	Listeners []chan interface{}
+	Value       interface{}
+	Type        reflect.Kind
+	Required    bool
+	CLI         bool
+	Listeners   []chan interface{}
 }
 
 type _Config struct {
@@ -27,14 +27,14 @@ var Config *_Config
 
 func DefaultEntry() _ConfigEntry {
 	return _ConfigEntry{
-		Long: "",
-		Short: "",
+		Long:        "",
+		Short:       "",
 		Description: "",
-		Value: nil,
-		Type: reflect.String,
-		Required: false,
-		CLI: false,
-		Listeners: make([]chan interface{}, 0),
+		Value:       nil,
+		Type:        reflect.String,
+		Required:    false,
+		CLI:         false,
+		Listeners:   make([]chan interface{}, 0),
 	}
 }
 
@@ -81,14 +81,14 @@ func (c *_Config) add(long, short, description string, value interface{}, tpe re
 }
 
 // Type enforce a configuration variable
-func enforce_type(value interface{}, cfg _ConfigEntry) (error) {
+func enforce_type(value interface{}, cfg _ConfigEntry) error {
 	val := reflect.ValueOf(value)
 	tpe := val.Kind()
 	if tpe != cfg.Type {
 		errmsg := fmt.Sprintf("Config Entry `%s` is not of type `%s`: (%s [%s])", cfg.Long, cfg.Type, val, tpe)
 		return errors.New(errmsg)
 	}
-  return nil
+	return nil
 }
 
 // Retrieve a configuation entry
