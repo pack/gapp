@@ -28,8 +28,8 @@ func (s *ConfigSuite) TestAddDefaults(c *C) {
 	c.Assert(resp.Description, Equals, "user name")
 	c.Assert(resp.Value, Equals, "Philip J. Fry")
 	c.Assert(resp.Type, Equals, reflect.String)
-	c.Assert(resp.Required, Equals, false)
 	c.Assert(resp.CLI, Equals, false)
+	c.Assert(resp.Required, Equals, false)
 }
 
 func (s *ConfigSuite) TestAddInteger(c *C) {

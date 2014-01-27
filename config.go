@@ -14,8 +14,8 @@ type _ConfigEntry struct {
 	Description string
 	Value       interface{}
 	Type        reflect.Kind
-	Required    bool
 	CLI         bool
+	Required    bool
 	Listeners   []chan interface{}
 }
 
@@ -35,8 +35,8 @@ func DefaultEntry() _ConfigEntry {
 		Description: "",
 		Value:       nil,
 		Type:        reflect.String,
-		Required:    false,
 		CLI:         false,
+		Required:    false,
 		Listeners:   make([]chan interface{}, 0),
 	}
 }
@@ -65,15 +65,15 @@ func (c *_Config) clear() {
 }
 
 // Add up a new configuration parameter
-func (c *_Config) add(long, short, description string, value interface{}, tpe reflect.Kind, required, cli bool) (_ConfigEntry, error) {
+func (c *_Config) add(long, short, description string, value interface{}, tpe reflect.Kind, cli, required bool) (_ConfigEntry, error) {
 	entry := DefaultEntry()
 	entry.Long = long
 	entry.Short = short
 	entry.Description = description
 	entry.Value = value
 	entry.Type = tpe
-	entry.Required = required
 	entry.CLI = cli
+	entry.Required = required
 	c.Lock()
 	defer c.Unlock()
 	err := enforce_type(value, entry)
