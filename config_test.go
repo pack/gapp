@@ -8,19 +8,31 @@ import (
 
 func TestConfig(t *testing.T) { TestingT(t) }
 
-type ConfigSuite struct{}
+type EmptyConfigSuite struct{}
+type PowerConfigSuite struct{ resp _ConfigEntry }
 
-var _ = Suite(&ConfigSuite{})
+var _ = Suite(&EmptyConfigSuite{})
+var _ = Suite(&PowerConfigSuite{})
 
-func (s *ConfigSuite) TearDownTest(c *C) {
+func (s *EmptyConfigSuite) TearDownTest(c *C) {
 	Config.clear()
 }
 
-func (s *ConfigSuite) TestEmpty(c *C) {
+func (s *PowerConfigSuite) TearDownTest(c *C) {
+	Config.clear()
+}
+
+func (s *PowerConfigSuite) SetUpTest(c *C) {
+	resp, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, IsNil)
+	s.resp = resp
+}
+
+func (s *EmptyConfigSuite) TestEmpty(c *C) {
 	c.Assert(len(Config.keys()), Equals, 0)
 }
 
-func (s *ConfigSuite) TestAddDefaults(c *C) {
+func (s *EmptyConfigSuite) TestAddDefaults(c *C) {
 	resp, err := Config.add("name", "n", "user name", "Philip J. Fry", reflect.String, false, false)
 	c.Assert(err, IsNil)
 	c.Assert(resp.Long, Equals, "name")
@@ -32,58 +44,46 @@ func (s *ConfigSuite) TestAddDefaults(c *C) {
 	c.Assert(resp.Required, Equals, false)
 }
 
-func (s *ConfigSuite) TestAddInteger(c *C) {
-	resp, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
-	c.Assert(err, IsNil)
-	c.Assert(resp.Value, Equals, 3000)
-	c.Assert(resp.Type, Equals, reflect.Int)
+func (s *PowerConfigSuite) TestAddInteger(c *C) {
+	c.Assert(s.resp.Value, Equals, 3000)
+	c.Assert(s.resp.Type, Equals, reflect.Int)
 }
 
-func (s *ConfigSuite) TestTypeEnforcement(c *C) {
+func (s *PowerConfigSuite) TestTypeEnforcement(c *C) {
 	_, err := Config.add("power", "p", "power level", "3000", reflect.Int, false, false)
 	c.Assert(err, ErrorMatches, "Config Entry `power` is not of type `int`.*")
 }
 
-func (s *ConfigSuite) TestGetValue(c *C) {
-	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
-	c.Assert(err, IsNil)
+func (s *PowerConfigSuite) TestGetValue(c *C) {
 	resp, ok := Config.get("power")
 	c.Assert(ok, Equals, true)
 	c.Assert(resp, Equals, 3000)
 }
 
-func (s *ConfigSuite) TestGetAlias(c *C) {
-	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
-	c.Assert(err, IsNil)
+func (s *PowerConfigSuite) TestGetAlias(c *C) {
 	resp, ok := Config.get("p")
 	c.Assert(ok, Equals, true)
 	c.Assert(resp, Equals, 3000)
 }
 
-func (s *ConfigSuite) TestInvalidGetValue(c *C) {
-	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
-	c.Assert(err, IsNil)
+func (s *PowerConfigSuite) TestInvalidGetValue(c *C) {
 	resp, ok := Config.get("youshouldfail")
 	c.Assert(ok, Equals, false)
 	c.Assert(resp, IsNil)
 }
 
-func (s *ConfigSuite) TestModifyInteger(c *C) {
-	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+func (s *PowerConfigSuite) TestModifyInteger(c *C) {
+	resp, err := Config.set("power", 9000)
 	c.Assert(err, Equals, nil)
-	resp2, err2 := Config.set("power", 9000)
-	c.Assert(err2, Equals, nil)
-	c.Assert(resp2.Value, Equals, 9000)
-	c.Assert(resp2.Type, Equals, reflect.Int)
+	c.Assert(resp.Value, Equals, 9000)
+	c.Assert(resp.Type, Equals, reflect.Int)
 }
 
-func (s *ConfigSuite) TestSubscription(c *C) {
-	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+func (s *PowerConfigSuite) TestSubscription(c *C) {
+	ch, err := Config.subscribe_to("power")
 	c.Assert(err, Equals, nil)
-	ch, err2 := Config.subscribe_to("power")
+	_, err2 := Config.set("power", 9000)
 	c.Assert(err2, Equals, nil)
-	_, err3 := Config.set("power", 9000)
-	c.Assert(err3, Equals, nil)
 	value := <-ch
 	c.Assert(value, Equals, 9000)
 }
