@@ -114,7 +114,7 @@ func (c *_Config) get_entry(key string) (_ConfigEntry, bool) {
 // Retrieve a configuration value
 func (c *_Config) get(key string) (interface{}, bool) {
 	cfg, ok := c.get_entry(key)
-	if ok == false {
+	if !ok {
 		return nil, ok
 	}
 	return cfg.Value, ok
@@ -123,7 +123,7 @@ func (c *_Config) get(key string) (interface{}, bool) {
 //Sets a configuration parameter
 func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
 	entry, ok := c.get_entry(key)
-	if ok == true {
+	if ok {
 		if reflect.ValueOf(value) == reflect.ValueOf(entry.Value) {
 			return entry, nil
 		}
@@ -153,7 +153,7 @@ func (c *_Config) _notify_subscribers(key string, value interface{}) {
 func (c *_Config) subscribe_to(key string) (chan interface{}, error) {
 	ch := make(chan interface{})
 	entry, ok := c.get_entry(key)
-	if ok == true {
+	if ok {
 		c.Lock()
 		defer c.Unlock()
 		entry.Listeners = append(entry.Listeners, ch)
