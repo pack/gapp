@@ -55,7 +55,7 @@ func init() {
 }
 
 // Returns the splice of entry keys
-func (c *_Config) keys() []string {
+func (c *_Config) Keys() []string {
 	klist := []string{}
 	for k, _ := range c.entries {
 		klist = append(klist, k)
@@ -64,12 +64,12 @@ func (c *_Config) keys() []string {
 }
 
 // Remove all configuration parameters
-func (c *_Config) clear() {
+func (c *_Config) Clear() {
 	_Load()
 }
 
 // Add up a new configuration parameter
-func (c *_Config) add(long, short, description string, value interface{}, tpe reflect.Kind, cli, required bool) (_ConfigEntry, error) {
+func (c *_Config) Add(long, short, description string, value interface{}, tpe reflect.Kind, cli, required bool) (_ConfigEntry, error) {
 	entry := DefaultEntry()
 	entry.Long = long
 	entry.Short = short
@@ -100,7 +100,7 @@ func enforce_type(value interface{}, cfg _ConfigEntry) error {
 }
 
 // Retrieve a configuation entry
-func (c *_Config) get_entry(key string) (_ConfigEntry, bool) {
+func (c *_Config) Get_entry(key string) (_ConfigEntry, bool) {
 	c.RLock()
 	defer c.RUnlock()
 	entry := key
@@ -112,8 +112,8 @@ func (c *_Config) get_entry(key string) (_ConfigEntry, bool) {
 }
 
 // Retrieve a configuration value
-func (c *_Config) get(key string) (interface{}, bool) {
-	cfg, ok := c.get_entry(key)
+func (c *_Config) Get(key string) (interface{}, bool) {
+	cfg, ok := c.Get_entry(key)
 	if !ok {
 		return nil, ok
 	}
@@ -121,8 +121,8 @@ func (c *_Config) get(key string) (interface{}, bool) {
 }
 
 //Sets a configuration parameter
-func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
-	entry, ok := c.get_entry(key)
+func (c *_Config) Set(key string, value interface{}) (_ConfigEntry, error) {
+	entry, ok := c.Get_entry(key)
 	if ok {
 		if reflect.ValueOf(value) == reflect.ValueOf(entry.Value) {
 			return entry, nil
@@ -143,16 +143,16 @@ func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
 
 // Helper function for listener notifications
 func (c *_Config) _notify_subscribers(key string, value interface{}) {
-	entry, _ := c.get_entry(key)
+	entry, _ := c.Get_entry(key)
 	for _, ch := range entry.Listeners {
 		ch <- value
 	}
 }
 
 // Subscribe to a given configuration value
-func (c *_Config) subscribe_to(key string) (chan interface{}, error) {
+func (c *_Config) Subscribe_to(key string) (chan interface{}, error) {
 	ch := make(chan interface{})
-	entry, ok := c.get_entry(key)
+	entry, ok := c.Get_entry(key)
 	if ok {
 		c.Lock()
 		defer c.Unlock()
