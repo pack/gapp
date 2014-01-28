@@ -22,6 +22,7 @@ type _ConfigEntry struct {
 // Config wrapper struct with RWMutex
 type _Config struct {
 	sync.RWMutex
+	alias   map[string]string
 	entries map[string]_ConfigEntry
 }
 
@@ -43,7 +44,10 @@ func DefaultEntry() _ConfigEntry {
 
 // Initializes configuration to an empty state
 func _Load() {
-	Config = &_Config{entries: make(map[string]_ConfigEntry)}
+	Config = &_Config{
+		alias:   make(map[string]string),
+		entries: make(map[string]_ConfigEntry),
+	}
 }
 
 func init() {
@@ -78,6 +82,7 @@ func (c *_Config) add(long, short, description string, value interface{}, tpe re
 	defer c.Unlock()
 	err := enforce_type(value, entry)
 	if err == nil {
+		c.alias[short] = long
 		c.entries[long] = entry
 	}
 	return entry, err
@@ -98,8 +103,12 @@ func enforce_type(value interface{}, cfg _ConfigEntry) error {
 func (c *_Config) get_entry(key string) (_ConfigEntry, bool) {
 	c.RLock()
 	defer c.RUnlock()
-	cfg, ok := c.entries[key]
-	return cfg, ok
+	entry := key
+	if alias, ok := c.alias[key]; ok {
+		entry = alias
+	}
+	cfg, ok2 := c.entries[entry]
+	return cfg, ok2
 }
 
 // Retrieve a configuration value
@@ -125,6 +134,7 @@ func (c *_Config) set(key string, value interface{}) (_ConfigEntry, error) {
 	err := enforce_type(value, entry)
 	if err == nil {
 		entry.Value = value
+		c.alias[entry.Short] = key
 		c.entries[key] = entry
 		go c._notify_subscribers(key, value)
 	}

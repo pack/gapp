@@ -52,10 +52,18 @@ func (s *ConfigSuite) TestGetValue(c *C) {
 	c.Assert(resp, Equals, 3000)
 }
 
+func (s *ConfigSuite) TestGetAlias(c *C) {
+	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
+	c.Assert(err, IsNil)
+	resp, ok := Config.get("p")
+	c.Assert(ok, Equals, true)
+	c.Assert(resp, Equals, 3000)
+}
+
 func (s *ConfigSuite) TestInvalidGetValue(c *C) {
 	_, err := Config.add("power", "p", "power level", 3000, reflect.Int, false, false)
 	c.Assert(err, IsNil)
-	resp, ok := Config.get("pow")
+	resp, ok := Config.get("youshouldfail")
 	c.Assert(ok, Equals, false)
 	c.Assert(resp, IsNil)
 }
