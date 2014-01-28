@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestConfig(t *testing.T) { TestingT(t) }
 
 type ConfigSuite struct{}
 
