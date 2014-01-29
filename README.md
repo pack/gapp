@@ -16,11 +16,11 @@ import (
 )
 
 func main() {
-  // Config.Add(<name>, <alias>, <description>, <data>, <data_type>, <cli_param>, <required>)
-  Config.Add("http_port", "p", "Http web port", 8080, reflect.Int, false, false)
-  Config.Add("http_host", "H", "Http hostname", "localhost", reflect.String, false, false)
-  Config.Add("redis_port", "r", "Redis port", 6379, reflect.Int, false, false)
-  Config.Add("redis_host", "R", "Redis hostname", "localhost", reflect.String, false, false)
+  // Config.Add(<name>, <alias>, <description>, <data>, <data_type>, <cli_param>)
+  Config.Add("http_port", "p", "Http web port", 8080, reflect.Int, false)
+  Config.Add("http_host", "H", "Http hostname", "localhost", reflect.String, false)
+  Config.Add("redis_port", "r", "Redis port", 6379, reflect.Int, false)
+  Config.Add("redis_host", "R", "Redis hostname", "localhost", reflect.String, false)
 
   http_entry, _ := Config.Get_entry("p")
   http_desc := http_entry.Description
