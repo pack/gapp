@@ -23,7 +23,7 @@ func (s *PowerConfigSuite) TearDownTest(c *C) {
 }
 
 func (s *PowerConfigSuite) SetUpTest(c *C) {
-	resp, err := Config.Add("power", "p", "power level", 3000, reflect.Int, false, false)
+	resp, err := Config.Add("power", "p", "power level", 3000, reflect.Int, false)
 	c.Assert(err, IsNil)
 	s.resp = resp
 }
@@ -33,7 +33,7 @@ func (s *EmptyConfigSuite) TestEmpty(c *C) {
 }
 
 func (s *EmptyConfigSuite) TestAddDefaults(c *C) {
-	resp, err := Config.Add("name", "n", "user name", "Philip J. Fry", reflect.String, false, false)
+	resp, err := Config.Add("name", "n", "user name", "Philip J. Fry", reflect.String, false)
 	c.Assert(err, IsNil)
 	c.Assert(resp.Long, Equals, "name")
 	c.Assert(resp.Short, Equals, "n")
@@ -41,7 +41,6 @@ func (s *EmptyConfigSuite) TestAddDefaults(c *C) {
 	c.Assert(resp.Value, Equals, "Philip J. Fry")
 	c.Assert(resp.Type, Equals, reflect.String)
 	c.Assert(resp.CLI, Equals, false)
-	c.Assert(resp.Required, Equals, false)
 }
 
 func (s *PowerConfigSuite) TestAddInteger(c *C) {
@@ -50,7 +49,7 @@ func (s *PowerConfigSuite) TestAddInteger(c *C) {
 }
 
 func (s *PowerConfigSuite) TestTypeEnforcement(c *C) {
-	_, err := Config.Add("power", "p", "power level", "3000", reflect.Int, false, false)
+	_, err := Config.Add("power", "p", "power level", "3000", reflect.Int, false)
 	c.Assert(err, ErrorMatches, "Config Entry `power` is not of type `int`.*")
 }
 
